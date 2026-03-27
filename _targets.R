@@ -4,8 +4,11 @@ read_packages <- c(
   "tidyverse",
   "sf",
   "maptiles",
+  "ggspatial",
   "patchwork",
   "khroma",
+  "ggnewscale",
+  "ggrepel",
   "climaemet"
 )
 
@@ -17,6 +20,11 @@ list(
   analysis_targets,
 
   #figures
+  basemap_targets,
+  bloom_count_targets,
+  bloom_map_targets,
+  chl_map_targets,
+  tp_map_targets,
   bacteria_targets,
   currents_targets
 )
