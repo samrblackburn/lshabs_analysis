@@ -134,7 +134,16 @@ chl_map_targets <- list(
           area(t = 1, b = 14, l = 1, r = 8)
         )
       )
+  ),
+  tar_target(
+    chl_map_file,
+    ggsave(
+      "figures/chl_map.png",
+      chl_map,
+      width = 6.5,
+      height = 3.5,
+      dpi = 500
+    ),
+    format = "file"
   )
 )
-
-# ggsave("figures/chl_map.png", tar_read(chl_map), width = 6.5, height = 3.5, dpi = 500)

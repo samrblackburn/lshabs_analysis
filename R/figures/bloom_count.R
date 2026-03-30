@@ -90,7 +90,16 @@ bloom_count_targets <- list(
         legend.position = "inside",
         legend.position.inside = c(0.2, 0.65)
       )
+  ),
+  tar_target(
+    bloom_count_file,
+    ggsave(
+      "figures/bloom_count.png",
+      bloom_count_plot,
+      width = 6.5,
+      height = 3.5,
+      dpi = 500
+    ),
+    format = "file"
   )
 )
-
-# ggsave("figures/bloom_count.png", tar_read(bloom_count_plot), width = 6.5, height = 3.5, dpi = 500)

@@ -224,7 +224,17 @@ tp_map_targets <- list(
           area(t = 24 - 4, b = 24 + 8, l = 1, r = 24 / 3)
         )
       )
+  ),
+
+  tar_target(
+    tp_map_file,
+    ggsave(
+      "figures/comb_tp_map.png",
+      tp_map,
+      width = 6.5,
+      height = 6.2,
+      dpi = 500
+    ),
+    format = "file"
   )
 )
-
-# ggsave("figures/comb_tp_map.png", tar_read(tp_map), width = 6.5, height = 6.2, dpi = 500)

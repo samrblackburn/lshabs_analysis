@@ -305,9 +305,29 @@ AAC
         legend.position.inside = c(0.35, 0.35),
         axis.text.x = element_text(angle = 45, hjust = 1)
       )
+  ),
+
+  ## Save figures to file -------------------------------------
+  tar_target(
+    bac_comp_file,
+    ggsave(
+      "figures/bac_comp.png",
+      bac_comp_plot,
+      width = 6.5,
+      height = 8.5,
+      dpi = 500
+    ),
+    format = "file"
+  ),
+  tar_target(
+    bac_conc_file,
+    ggsave(
+      "figures/bac_conc.png",
+      bac_conc_plot,
+      width = 6,
+      height = 5.5,
+      dpi = 500
+    ),
+    format = "file"
   )
 )
-
-# ggsave("figures/bac_comp.png", tar_read(bac_comp_plot), width = 6.5, height = 8.5, dpi = 500)
-
-# ggsave("figures/bac_conc.png", tar_read(bac_conc_plot), width = 6, height = 5.5, dpi = 500)

@@ -265,7 +265,16 @@ bloom_map_targets <- list(
     (big_blooms | slre_blooms | apostle_blooms) /
       main_blooms +
       plot_layout(heights = c(1.4, 2))
+  ),
+  tar_target(
+    bloom_map_file,
+    ggsave(
+      "figures/bloom_map.png",
+      bloom_comb_map,
+      width = 6.5,
+      height = 5,
+      dpi = 500
+    ),
+    format = "file"
   )
 )
-
-# ggsave("figures/bloom_map.png", tar_read(bloom_comb_map), width = 6.5, height = 5, dpi = 500)

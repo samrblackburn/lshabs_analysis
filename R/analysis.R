@@ -295,5 +295,58 @@ analysis_targets <- list(
         .by = site
       ) %>%
       st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+  ),
+
+  ## Function to plot chl-a against a different variable ---------------------------
+  # Adds linear regression R2 and P to plot
+  tar_target(
+    plot_chl_relationship,
+    function(
+      df,
+      x_var,
+      x_label,
+      annual = FALSE,
+      legend_pos = c(0.8, 0.92),
+      label_pos = c(0.95, 0.85)
+    ) {
+      chl_text <- if_else(
+        annual,
+        "Annual Mean Chlorophyll-a (µg/L)",
+        "Chlorophyll-a (µg/L)"
+      )
+      ggplot(df, aes(x = {{ x_var }}, y = chl)) +
+        geom_point(alpha = 0.7) +
+        geom_smooth(
+          aes(color = "linear regression"),
+          method = "lm",
+          se = FALSE
+        ) +
+        stat_poly_eq(
+          aes(
+            label = paste(
+              after_stat(rr.label),
+              after_stat(p.value.label),
+              sep = "*\", \"*"
+            )
+          ),
+          formula = y ~ x,
+          parse = TRUE,
+          label.x = label_pos[1],
+          label.y = label_pos[2],
+          size = 3
+        ) +
+        scale_color_manual(
+          name = NULL,
+          values = c("linear regression" = "#4477aa")
+        ) +
+        labs(x = x_label, y = chl_text) +
+        theme_bw(base_size = 12) +
+        theme(
+          legend.position = "inside",
+          legend.position.inside = legend_pos,
+          panel.grid.minor = element_blank(),
+          panel.grid.major = element_blank()
+        )
+    }
   )
 )

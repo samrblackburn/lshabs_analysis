@@ -265,7 +265,16 @@ currents_targets <- list(
         strip.text = element_text(size = 10, face = "bold"),
         panel.spacing = unit(1.5, "lines")
       )
-  })
+  }),
+  tar_target(
+    fvcom_plot_file,
+    ggsave(
+      "figures/currents.png",
+      fvcom_plot,
+      width = 6.5,
+      height = 10,
+      dpi = 500
+    ),
+    format = "file"
+  )
 )
-
-# ggsave("figures/currents.png", tar_read(fvcom_plot), width = 6.5, height = 10, dpi = 500)

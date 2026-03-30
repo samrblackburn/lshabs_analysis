@@ -9,6 +9,7 @@ read_packages <- c(
   "khroma",
   "ggnewscale",
   "ggrepel",
+  "ggpmisc",
   "climaemet"
 )
 
@@ -24,7 +25,10 @@ list(
   bloom_count_targets,
   bloom_map_targets,
   chl_map_targets,
+  chl_box_targets,
+  temperature_targets,
   tp_map_targets,
+  nutrient_targets,
   bacteria_targets,
   currents_targets
 )
