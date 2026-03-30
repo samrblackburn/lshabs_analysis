@@ -49,5 +49,62 @@ nutrient_targets <- list(
       height = 8,
       dpi = 500
     )
+  ),
+
+  ## Correlations between nutrients in lake ----------------------------
+  # Correlation matrix
+  tar_target(
+    lake_nut_cor,
+    lake_filt %>%
+      select(
+        no3,
+        tdn,
+        tn,
+        nh3,
+        tp,
+        tdp,
+        pp,
+        po4,
+        doc,
+        poc,
+        toc,
+        si
+      ) %>%
+      cor(use = "pairwise.complete.obs", method = "pearson") %>%
+      as.table() %>%
+      as.data.frame() %>%
+      ggplot(aes(x = Var1, y = Var2, fill = Freq)) +
+      geom_tile(color = "white") +
+      scale_fill_gradient2(
+        low = "red",
+        high = "blue",
+        mid = "white",
+        midpoint = 0,
+        limit = c(-1, 1),
+        name = "Pearson\nCorrelation"
+      ) +
+      geom_text(
+        aes(label = round(Freq, 2)),
+        color = "black",
+        size = 2.5
+      ) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        panel.grid.major = element_blank()
+      ) +
+      coord_fixed()
+  ),
+  tar_target(
+    lake_nut_cor_file,
+    ggsave(
+      "figures/lake_nut_cor.png",
+      lake_nut_cor,
+      width = 6.5,
+      height = 6.5,
+      dpi = 500
+    )
   )
 )

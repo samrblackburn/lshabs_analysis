@@ -78,7 +78,11 @@ analysis_targets <- list(
     lake,
     read_csv(
       lake_file,
-      col_types = cols(don = col_double(), cnr = col_double())
+      col_types = cols(
+        ton = col_double(),
+        don = col_double(),
+        cnr = col_double()
+      )
     )
   ),
   tar_target(est, read_csv(est_file)),
@@ -297,6 +301,34 @@ analysis_targets <- list(
       st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
   ),
 
+  # Median values across all sites in lake, est, trib
+  tar_target(
+    lake_med_all,
+    lake_filt %>%
+      select(-c(date, site, latitude, longitude)) %>%
+      summarise(
+        across(everything(), ~ median(., na.rm = T))
+      )
+  ),
+
+  tar_target(
+    est_med_all,
+    est_filt %>%
+      select(-c(date, site, latitude, longitude)) %>%
+      summarise(
+        across(everything(), ~ median(., na.rm = T))
+      )
+  ),
+
+  tar_target(
+    trib_med_all,
+    trib_filt %>%
+      select(-c(date, site, latitude, longitude)) %>%
+      summarise(
+        across(everything(), ~ median(., na.rm = T))
+      )
+  ),
+
   ## Function to plot chl-a against a different variable ---------------------------
   # Adds linear regression R2 and P to plot
   tar_target(
@@ -348,5 +380,84 @@ analysis_targets <- list(
           panel.grid.major = element_blank()
         )
     }
+  ),
+
+  ## Additional summary breakdowns --------------------------------------------------
+  # Nearshore/offshore comparison from BRICO study
+  tar_target(
+    brico,
+    brico <- lake %>%
+      filter(source == "BRICO") %>%
+      mutate(
+        type = case_when(
+          str_detect(site, "\\da") ~ "nearshore",
+          str_detect(site, "\\dc") ~ "offshore",
+          .default = NA
+        )
+      ) %>%
+      filter(!is.na(type))
+  ),
+  tar_target(
+    brico_med,
+    brico %>%
+      select(-c(date, latitude, longitude, site, source)) %>%
+      summarise(
+        across(everything(), ~ median(., na.rm = T)),
+        .by = type
+      )
+  ),
+  tar_target(
+    brico_tp_comp,
+    t.test(
+      #tar_read(brico_tp_comp)
+      brico %>%
+        filter(type == "nearshore") %>%
+        pull(tp),
+      brico %>%
+        filter(type == "offshore") %>%
+        pull(tp)
+    )
+  ),
+  tar_target(
+    brico_no3_comp,
+    t.test(
+      #tar_read(brico_no3_comp)
+      brico %>%
+        filter(type == "nearshore") %>%
+        pull(no3),
+      brico %>%
+        filter(type == "offshore") %>%
+        pull(no3)
+    )
+  ),
+  # E and W WI Coast medians comparison
+  tar_target(
+    lake_med_reg,
+    lake_med %>%
+      mutate(
+        lon = st_coordinates(.)[, 1],
+        region = case_when(
+          str_detect(site, "CB") ~ "CB",
+          lon < -91.5 ~ "W",
+          lon > -91.5 ~ "E",
+          .default = NA
+        )
+      ) %>%
+      select(-c(site, lon)) %>%
+      st_drop_geometry() %>%
+      summarise(
+        across(everything(), ~ median(., na.rm = T)),
+        .by = region
+      )
+  ),
+  # Faxon creek comparison to other tributaries
+  tar_target(
+    faxon_comp,
+    trib %>%
+      filter(source %in% c("UMD", "NPS")) %>% # sites with comparable sampling schedules
+      filter(year(date) %in% c(2021, 2022)) %>% # only sampled 2021-2022
+      mutate(faxon = site == "Faxon Creek") %>%
+      select(-c(date, site, source, huc, latitude, longitude)) %>%
+      summarise(across(everything(), ~ median(., na.rm = T)), .by = faxon)
   )
 )

@@ -23,6 +23,15 @@ temperature_targets <- list(
       summarize(temp = mean(temp), .by = c(date, site))
   ),
 
+  ## Maximum Daily Mean Temperatures -----------------------------------------
+  tar_target(
+    lake_year_max,
+    nbdc_temp %>%
+      mutate(year = year(date)) %>%
+      select(year, temp) %>%
+      summarize(temp = max(temp, na.rm = TRUE), .by = year)
+  ),
+
   ## Line plot of degree days by year ----------------------------------------
   tar_target(
     dd_line_plot,
@@ -39,12 +48,21 @@ temperature_targets <- list(
         bloom = case_when(
           year %in% c("2011", "2013", "2014", "2015") ~ "No Blooms",
           .default = "Bloom Occurred"
+        ),
+        linecolor = case_when(
+          year %in% c("2012", "2018") ~
+            "red",
+          .default = "black"
         )
       ) %>%
       mutate(dd = if_else(year == 2020, NA, dd)) %>%
       filter(date > 140 & date < 280) %>%
       ggplot(aes(date, dd, group = year)) +
-      geom_line(aes(linetype = bloom), linewidth = 1, alpha = 0.6) +
+      geom_line(
+        aes(linetype = bloom, color = linecolor),
+        linewidth = 1,
+        alpha = 0.6
+      ) +
       scale_x_continuous(
         name = NULL,
         breaks = c(152, 182, 213, 244, 274),
@@ -54,6 +72,8 @@ temperature_targets <- list(
         name = NULL,
         values = c("solid", "dotted")
       ) +
+      scale_color_manual(values = c("black", "red")) +
+      guides(color = "none") +
       ylab("Degree Days (ºC)") +
       theme_bw(base_size = 12) +
       theme(
@@ -201,6 +221,18 @@ temperature_targets <- list(
       )
   ),
 
+  #DD in prior 8 weeks vs blooms
+  tar_target(
+    #tar_read(bloom_dd8_t)
+    bloom_dd8_t,
+    t.test(
+      bloom_dd$dd8,
+      bloom_dd$dd8_mean,
+      paired = TRUE,
+      alternative = "greater"
+    )
+  ),
+
   ## Chl-a vs water temperature ----------------------------------------------
   tar_target(
     chl_temp_plot,
@@ -253,6 +285,85 @@ temperature_targets <- list(
       temp_comb_plot,
       width = 4.25,
       height = 8,
+      dpi = 500
+    ),
+    format = "file"
+  ),
+
+  ## Degree days vs chl-a ----------------------------------------------------
+  tar_target(
+    chl_dd_comp,
+    lake_filt %>%
+      left_join(lake_dd_lag, by = join_by(date)) %>%
+      plot_chl_relationship(
+        dd4,
+        "Degree Days In Prior 8 Weeks (ºC)",
+        FALSE,
+        legend_pos = c(0.78, 0.93),
+        label_pos = c(0.97, 0.87)
+      )
+  ),
+  tar_target(
+    chl_dd_comp_file,
+    ggsave(
+      "figures/chl_dd_comp.png",
+      chl_dd_comp,
+      width = 4.25,
+      height = 4,
+      dpi = 500
+    ),
+    format = "file"
+  ),
+
+  ## Buoy Temperature vs Sample Location Temperature -------------------------
+  tar_target(
+    buoy_temp_comp,
+    lake_filt %>%
+      left_join(nbdc_temp, by = join_by(date)) %>%
+      ggplot(aes(x = temp.x, y = temp.y)) +
+      xlab("Sample Location Water Temperature (ºC)") +
+      ylab("Buoy Water Temperature (ºC)") +
+      xlim(5, 25) +
+      ylim(5, 25) +
+      geom_point(alpha = 0.7) +
+      geom_smooth(
+        aes(color = "linear regression"),
+        method = "lm",
+        se = FALSE
+      ) +
+      stat_poly_eq(
+        aes(
+          label = paste(
+            after_stat(rr.label),
+            after_stat(p.value.label),
+            sep = "*\", \"*"
+          )
+        ),
+        formula = y ~ x,
+        parse = TRUE,
+        label.x = 0.75,
+        label.y = 0.95,
+        size = 3
+      ) +
+      scale_color_manual(
+        name = NULL,
+        values = c("linear regression" = "#4477aa")
+      ) +
+      theme_bw(base_size = 12) +
+      theme(
+        legend.position = "inside",
+        legend.position.inside = c(0.22, 0.93),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank()
+      )
+  ),
+  tar_target(
+    buoy_temp_comp_file,
+    ggsave(
+      "figures/buoy_temp_comp.png",
+      buoy_temp_comp,
+      width = 4.25,
+      height = 4,
       dpi = 500
     ),
     format = "file"
