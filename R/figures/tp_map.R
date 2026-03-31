@@ -115,10 +115,16 @@ tp_map_targets <- list(
         size = 4,
         shape = 21
       ) +
+      # scale_fill_viridis_c(
+      #   name = "TP (µg/L)",
+      #   end = 0.9,
+      #   option = "cividis"
+      # ) +
       scale_fill_viridis_c(
         name = "TP (µg/L)",
-        end = 0.9,
-        option = "cividis"
+        limits = c(0, 80),
+        option = "cividis",
+        na.value = "#EE7733"
       ) +
       guides(fill = guide_colorbar(barheight = unit(2, "cm"))) +
       annotate("text", x = -92.03, y = 46.65, label = "c", size = 5) +
