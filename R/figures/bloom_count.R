@@ -1,12 +1,26 @@
 bloom_count_targets <- list(
   ## Count blooms ------------------------------------------------------------
 
+  # Get rid of duplicate bloom reports
+  tar_target(
+    bloom_distinct,
+    bloom_filt %>%
+      st_drop_geometry() %>%
+      distinct(date, location, .keep_all = TRUE)
+  ),
+
+  # Count blooms by month and location
+  tar_target(
+    bloom_month,
+    bloom_distinct %>%
+      mutate(month = month(date)) %>%
+      summarize(count = n(), .by = c(month, location))
+  ),
+
   # Count by year and verification status
   tar_target(
     bloom_count,
-    bloom_filt %>%
-      st_drop_geometry() %>%
-      distinct(date, location, .keep_all = TRUE) %>%
+    bloom_distinct %>%
       summarise(
         all = n(),
         confirmed = sum(confirmed),
