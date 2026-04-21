@@ -198,7 +198,7 @@ bacteria_targets <- list(
       ) +
       scale_x_date(
         name = NULL,
-        date_labels = "%d-%b"
+        date_labels = "%b %e"
       ) +
       theme_bw() +
       theme(
@@ -243,7 +243,7 @@ bacteria_targets <- list(
           ymd("2024-09-01"),
           ymd("2024-10-01")
         ),
-        date_labels = "%d-%b"
+        date_labels = "%b %e"
       ) +
       theme_bw() +
       theme(
@@ -293,7 +293,7 @@ AAC
       ) +
       scale_x_date(
         name = NULL,
-        date_labels = "%d-%b"
+        date_labels = "%b %e"
       ) +
       scale_color_muted(name = NULL) +
       guides(color = guide_legend(ncol = 2)) +

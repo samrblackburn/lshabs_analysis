@@ -26,7 +26,7 @@ chl_box_targets <- list(
       ) +
       scale_color_manual(
         name = NULL,
-        values = c("#009988", "#0077BB", "#33BBEE")
+        values = c("#004488", "#994455", "#997700")
       ) +
       ylab("Chl-a (µg/L)") +
       xlab(NULL) +

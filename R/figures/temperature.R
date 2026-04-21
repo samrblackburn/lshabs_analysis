@@ -206,7 +206,7 @@ temperature_targets <- list(
         name = "Actual Water Temperature During Bloom (ºC)",
         limits = c(14, 23)
       ) +
-      scale_color_manual(name = NULL, values = c("#228833", "#4477aa")) +
+      scale_color_manual(name = NULL, values = c("#994455", "#004488")) +
       theme_bw(base_size = 12) +
       theme(
         legend.position = "inside",
