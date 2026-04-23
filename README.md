@@ -1,4 +1,4 @@
-# Analysis of Lake Superior Nutrient and Chlorophyll Data
+# Analysis of Lake Superior, St. Louis River, and Connected Tributary Nutrient, Chlorophyll, and Cyanobacterial Bloom Data
 
 This work is an extension of the [related data synthesis project](https://github.com/Lake-Superior-Reserve/ls_habs_synthesis/tree/main).
 
