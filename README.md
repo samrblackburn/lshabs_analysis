@@ -2,7 +2,7 @@
 
 This work is an extension of the [related data synthesis project](https://github.com/Lake-Superior-Reserve/ls_habs_synthesis/tree/main).
 
-It documents the code used to create summaries and figures from that dataset which are used in Blackburn et al.
+It documents the code used to create summaries and figures from that dataset which are used in the associated publication.
 
 ## Structure
 
