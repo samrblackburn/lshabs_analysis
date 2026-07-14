@@ -13,14 +13,14 @@ read_packages <- c(
   "climaemet"
 )
 
-tar_option_set(packages = c(read_packages), tidy_eval = FALSE)
+tar_option_set(packages = read_packages, tidy_eval = FALSE)
 
 tar_source()
 
 list(
   analysis_targets,
 
-  #figures
+  # figures
   basemap_targets,
   bloom_count_targets,
   bloom_map_targets,

@@ -3,8 +3,8 @@ bloom_map_targets <- list(
   tar_target(
     bloom_credit,
     tibble(
-      x = -90.77,
-      y = 46.565,
+      x = -90.71,
+      y = 46.56,
       label = get_credit("CartoDB.PositronNoLabels")
     )
   ),
@@ -24,8 +24,8 @@ bloom_map_targets <- list(
   tar_target(
     bloom_key_locs_big,
     tibble(
-      x = c(-91.55, -90),
-      y = c(47.25, 48.2),
+      x = c(-91.2, -90.5),
+      y = c(47.3, 48.2),
       label = c(
         "Western Arm",
         "Thunder Bay"
@@ -55,7 +55,7 @@ bloom_map_targets <- list(
   tar_target(
     bloom_main_box,
     st_bbox(
-      c(xmin = -92.3, xmax = -90.5, ymin = 46.55, ymax = 47.1),
+      c(xmin = -92.35, xmax = -90.5, ymin = 46.55, ymax = 47.1),
       crs = 4326
     ) %>%
       st_as_sfc() %>%
@@ -102,7 +102,7 @@ bloom_map_targets <- list(
         aes(x, y, label = label),
         fill = "white",
         color = "black",
-        size = 2.5,
+        size = 2,
         label.r = unit(0, "lines")
       ) +
       annotation_scale(
@@ -223,6 +223,7 @@ bloom_map_targets <- list(
       mutate(year = factor(year)) %>%
       ggplot() +
       geom_raster(data = big_basemap, aes(x, y, fill = color)) +
+      geom_raster(data = big_basemap_e, aes(x, y, fill = color)) +
       scale_fill_identity() +
       new_scale_fill() +
       geom_sf(
@@ -234,8 +235,8 @@ bloom_map_targets <- list(
       ) +
       scale_fill_discreterainbow(name = NULL) +
       geom_sf(data = bloom_main_box, linewidth = 0.2) +
-      annotate("text", x = -90.4, y = 46.7, label = "b") +
-      annotate("text", x = -92.2, y = 48.55, label = "a", size = 5) +
+      annotate("text", x = -90.35, y = 46.7, label = "b") +
+      annotate("text", x = -92.2, y = 49, label = "a", size = 5) +
       geom_label(
         data = bloom_key_locs_big,
         aes(x, y, label = label),
@@ -245,12 +246,12 @@ bloom_map_targets <- list(
       scale_x_continuous(
         name = NULL,
         expand = c(0, 0),
-        limits = c(-92.5, -88.25)
+        limits = c(-92.5, -84)
       ) +
       scale_y_continuous(
         name = NULL,
         expand = c(0, 0),
-        limits = c(46.5, 48.75)
+        limits = c(46.3, 49.2)
       ) +
       theme_bw(base_size = 10) +
       theme(
@@ -263,8 +264,8 @@ bloom_map_targets <- list(
   tar_target(
     bloom_comb_map,
     (big_blooms | slre_blooms | apostle_blooms) /
-      main_blooms +
-      plot_layout(heights = c(1.4, 2))
+      (main_blooms) +
+      plot_layout(heights = c(1.2, 2))
   ),
   tar_target(
     bloom_map_file,
@@ -272,7 +273,7 @@ bloom_map_targets <- list(
       "figures/bloom_map.png",
       bloom_comb_map,
       width = 6.5,
-      height = 5,
+      height = 4.7,
       dpi = 500
     ),
     format = "file"

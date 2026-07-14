@@ -46,8 +46,8 @@ temperature_targets <- list(
       mutate(date = yday(date), year = factor(year)) %>%
       mutate(
         bloom = case_when(
-          year %in% c("2011", "2013", "2014", "2015") ~ "No Blooms",
-          .default = "Bloom Occurred"
+          year %in% c("2011", "2013", "2014", "2015") ~ "No Blooms in Year",
+          .default = "Bloom Occurred in Year"
         ),
         linecolor = case_when(
           year %in% c("2012", "2018") ~
@@ -74,7 +74,7 @@ temperature_targets <- list(
       ) +
       scale_color_manual(values = c("black", "red")) +
       guides(color = "none") +
-      ylab("Degree Days (ºC)") +
+      ylab("Cumulative Degree Days in Year (ºC)") +
       theme_bw(base_size = 12) +
       theme(
         legend.position = "inside",
@@ -96,7 +96,11 @@ temperature_targets <- list(
       geom_jitter(width = 0.2, height = 0, alpha = 0.1) +
       ylab("Daily Mean Water Temperature (ºC)") +
       xlab(NULL) +
-      theme_bw(base_size = 12)
+      theme_bw(base_size = 12) +
+      theme(
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank()
+      )
   ),
 
   ## Degree Days/water temp vs. blooms --------------------------------------------------
@@ -199,11 +203,14 @@ temperature_targets <- list(
       annotate("text", x = 23, y = 22.5, label = "1:1", size = 4) +
       geom_point(size = 2) +
       scale_x_continuous(
-        name = "Average Water Temperature on Bloom Date (ºC)",
+        name = str_wrap(
+          "Average Water Temperature 2011-2024 (ºC) on Day of Year Bloom Occurred",
+          40
+        ),
         limits = c(14, 23)
       ) +
       scale_y_continuous(
-        name = "Actual Water Temperature During Bloom (ºC)",
+        name = "Water Temperature on Bloom Date (ºC)",
         limits = c(14, 23)
       ) +
       scale_color_manual(name = NULL, values = c("#994455", "#004488")) +

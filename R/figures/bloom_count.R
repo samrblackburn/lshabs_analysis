@@ -69,7 +69,7 @@ bloom_count_targets <- list(
           verified,
           fill = factor(
             location,
-            levels = c("St. Louis Estuary", "Thunder Bay", "Western Arm")
+            levels = c("Thunder Bay", "St. Louis Estuary", "Western Arm")
           )
         ),
         stat = "identity"
@@ -82,7 +82,7 @@ bloom_count_targets <- list(
       geom_point(data = bloom_count_total, aes(year, all), size = 2) +
       theme_bw(base_size = 12) +
       scale_y_continuous(
-        name = "Reported Blooms",
+        name = "Number of Blooms",
         breaks = c(0, 2, 4, 6, 8, 10, 12)
       ) +
       scale_x_continuous(
@@ -91,7 +91,7 @@ bloom_count_targets <- list(
       ) +
       scale_fill_manual(
         name = "Verified",
-        values = c("#228833", "#66CCEE", "#4477aa")
+        values = c("#66CCEE", "#228833", "#4477aa")
       ) +
       scale_linetype_manual(
         name = "Reported",

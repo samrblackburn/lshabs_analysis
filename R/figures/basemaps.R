@@ -56,5 +56,15 @@ basemap_targets <- list(
       crs = 4326
     ) %>%
       get_basemap()
+  ),
+
+  # Eastern half of Lake Superior
+  tar_target(
+    big_basemap_e,
+    st_bbox(
+      c(xmin = -88, ymin = 46, xmax = -84, ymax = 49),
+      crs = 4326
+    ) %>%
+      get_basemap()
   )
 )

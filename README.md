@@ -18,7 +18,7 @@ Run the following snippet to create all data objects and figures:
 
 ``` r
 # install required packages
-install.packages("targets", "tidyverse", "sf", "maptiles", "ggspatial", "patchwork", "khroma", "ggnewscale", "ggrepel", "ggpmisc", "climaemet")
+install.packages(c("targets", "tidyverse", "sf", "maptiles", "ggspatial", "patchwork", "khroma", "ggnewscale", "ggrepel", "ggpmisc", "climaemet"))
 
 # run pipeline
 targets::tar_make()

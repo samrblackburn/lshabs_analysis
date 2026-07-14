@@ -17,7 +17,12 @@ chl_box_targets <- list(
       ) %>%
       mutate(year = as_factor(year(date))) %>%
       ggplot(aes(year, chl)) +
-      geom_jitter(aes(color = region), width = 0.2, height = 0, alpha = 0.5) +
+      geom_jitter(
+        aes(color = region, shape = region),
+        width = 0.2,
+        height = 0,
+        alpha = 0.5
+      ) +
       geom_boxplot(
         outliers = FALSE,
         fill = NA,
@@ -28,11 +33,14 @@ chl_box_targets <- list(
         name = NULL,
         values = c("#004488", "#994455", "#997700")
       ) +
+      scale_shape_discrete(name = NULL) +
       ylab("Chl-a (µg/L)") +
       xlab(NULL) +
       ylim(0, 10) +
       theme_bw(base_size = 12) +
       theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
         legend.position = "inside",
         legend.position.inside = c(0.1, 0.8),
         legend.background = element_rect(

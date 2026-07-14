@@ -145,13 +145,13 @@ bacteria_targets <- list(
       ) %>%
       mutate(
         phylum = case_when(
-          species %in% chlorophyta_list ~ "chlorophyta",
-          species %in% heterokontophyta_list ~ "heterokontophyta",
-          species %in% cyanophyta_list ~ "cyanophyta",
-          species %in% charophyta_list ~ "charophyta",
-          species %in% euglenophyta_list ~ "euglenophyta",
-          species %in% dinoflagellata_list ~ "dinoflagellata",
-          species %in% cryptista_list ~ "cryptista",
+          species %in% chlorophyta_list ~ "Chlorophyta",
+          species %in% heterokontophyta_list ~ "Heterokontophyta",
+          species %in% cyanophyta_list ~ "Cyanophyta",
+          species %in% charophyta_list ~ "Charophyta",
+          species %in% euglenophyta_list ~ "Euglenophyta",
+          species %in% dinoflagellata_list ~ "Dinoflagellata",
+          species %in% cryptista_list ~ "Cryptista",
           .default = "other"
         )
       ) %>%
@@ -183,7 +183,7 @@ bacteria_targets <- list(
       ggplot(aes(date, pct, fill = phylum)) +
       facet_grid(rows = vars(name), cols = vars(year)) +
       geom_area(position = "fill", color = "black", linewidth = 0.25) +
-      ylab(NULL) +
+      ylab("Proportion of Cells") +
       scale_fill_manual(
         name = NULL,
         values = c(
