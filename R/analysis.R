@@ -225,7 +225,6 @@ analysis_targets <- list(
   ),
 
   # Trim down tributary data for analysis/plotting
-  # Inconsistent
   tar_target(
     trib_filt,
     trib %>%
@@ -329,6 +328,367 @@ analysis_targets <- list(
       )
   ),
 
+  ## Number of observations of each variable at each site ------------------------------
+  tar_target(
+    lake_var_counts,
+    lake_filt %>%
+      select(-c(date, chl_field, do_sat, npr, cnr, cpr, pnpr, pcnr, pcpr)) %>%
+      pivot_longer(-site) %>%
+      filter(!is.na(value)) %>%
+      summarize(n = n(), .by = c(site, name)) %>%
+      pivot_wider(values_from = n)
+  ),
+
+  tar_target(
+    est_var_counts,
+    est_filt %>%
+      select(-c(date, chl_field, do_sat, npr, cnr, cpr, pnpr, pcnr, pcpr)) %>%
+      pivot_longer(-site) %>%
+      filter(!is.na(value)) %>%
+      summarize(n = n(), .by = c(site, name)) %>%
+      pivot_wider(values_from = n)
+  ),
+
+  tar_target(
+    trib_var_counts,
+    trib_filt %>%
+      select(-c(date, do_sat, npr, cnr, cpr, pnpr, pcnr, pcpr)) %>%
+      pivot_longer(-site) %>%
+      filter(!is.na(value)) %>%
+      summarize(n = n(), .by = c(site, name)) %>%
+      pivot_wider(values_from = n)
+  ),
+
+  ## Create tables of correlation coefficients (r), slopes, p-values between variables in lake, est, trib
+  # Uses repeated measures correlation for r and linear mixed models for slope.
+  # Site is a random effect, so variable intercept but constant slope across sites
+  # To check assumptions for a pair of variables, you can use the "performance package"
+  # Example:
+  # chl_mod <- lmer(chl ~ tp + (1 | site), data = lake_filt)
+  # performance::check_model(chl_mod)
+
+  # Function to generate table
+  tar_target(cor_table, function(df, vars, site_col = "site") {
+    # lmer: unscaled slope + p-value
+    # return NA row if no overlap in samples between variables
+    safe_lmer <- possibly(
+      function(f_str, d) {
+        mod <- lmerTest::lmer(as.formula(f_str), data = d)
+        broom.mixed::tidy(mod, effects = "fixed") %>%
+          filter(term != "(Intercept)") %>%
+          slice(1) %>% # guard against multi-level factor predictors
+          select(estimate, p.value)
+      },
+      otherwise = tibble(estimate = NA, p.value = NA)
+    )
+
+    # rmcorr: repeated measures correlation coefficient + p-value
+    # return NA row if no overlap in samples between variables
+    safe_rmcorr <- possibly(
+      function(v1, v2, d) {
+        rmc <- rmcorr::rmcorr(
+          participant = d[[site_col]],
+          measure1 = d[[v1]],
+          measure2 = d[[v2]],
+          dataset = d
+        )
+        tibble(r_value = unname(rmc$r), r_p_value = unname(rmc$p))
+      },
+      otherwise = tibble(r_value = NA, r_p_value = NA)
+    )
+
+    # create table of measures
+    tibble(var1 = factor(vars, levels = vars)) %>%
+      expand_grid(var2 = factor(vars, levels = vars)) %>%
+      # remove duplicate pairings
+      filter(as.integer(var1) < as.integer(var2)) %>%
+      mutate(var1 = as.character(var1), var2 = as.character(var2)) %>%
+      # create formula for lmer for each combination
+      mutate(
+        lmer_formula = map2_chr(
+          var1,
+          var2,
+          ~ paste0("`", .x, "` ~ `", .y, "` + (1 | ", site_col, ")")
+        ),
+
+        # Run models
+        stats_lmer = map(lmer_formula, ~ safe_lmer(.x, d = df)),
+        stats_rmcorr = map2(var1, var2, ~ safe_rmcorr(.x, .y, d = df))
+      ) %>%
+
+      # Clean up the list-columns before unnesting to prevent name collisions
+      mutate(
+        stats_lmer = map(
+          stats_lmer,
+          ~ rename(.x, slope = estimate, slope_p_value = p.value)
+        )
+      ) %>%
+
+      # make final table
+      unnest(c(stats_lmer, stats_rmcorr)) %>%
+      select(
+        variable_y = var1,
+        variable_x = var2,
+        r_value,
+        r_p_value,
+        slope,
+        slope_p_value
+      )
+  }),
+
+  # make tables for each dataset
+  # warnings are suppressed because rmcorr doesn't handle variable names well
+  tar_target(
+    lake_cor_table,
+    suppressWarnings(
+      cor_table(
+        lake_filt,
+        c(
+          "chl",
+          "temp",
+          "do_sat",
+          "cond",
+          "ph",
+          "turb",
+          "tss",
+          "tp",
+          "tdp",
+          "pp",
+          "po4",
+          "tn",
+          "tdn",
+          "no3",
+          "nh3",
+          "toc",
+          "doc",
+          "poc",
+          "si"
+        )
+      )
+    )
+  ),
+  tar_target(
+    est_cor_table,
+    suppressWarnings(
+      cor_table(
+        est_filt,
+        c(
+          "chl",
+          "temp",
+          "do_sat",
+          "cond",
+          "ph",
+          "turb",
+          "tss",
+          "tp",
+          "po4",
+          "tn",
+          "no3",
+          "nh3"
+        )
+      )
+    )
+  ),
+  tar_target(
+    trib_cor_table,
+    suppressWarnings(
+      cor_table(
+        trib_filt,
+        c(
+          "chl",
+          "temp",
+          "do_sat",
+          "cond",
+          "ph",
+          "turb",
+          "tss",
+          "tp",
+          "tdp",
+          "pp",
+          "po4",
+          "tn",
+          "tdn",
+          "no3",
+          "nh3",
+          "toc",
+          "doc",
+          "poc",
+          "si"
+        )
+      )
+    )
+  ),
+
+  ## Plot correlation coefficients between variables for each dataset
+
+  # Function to create plots
+  tar_target(
+    plot_cor_matrix,
+    function(
+      results,
+      vars = target_vars,
+      alpha = 0.05,
+      title = "Repeated Measures Correlation",
+      val_col = "r_value",
+      p_col = "r_p_value",
+      fill_lab = "r"
+    ) {
+      # Polished labels for plot
+      var_labels <- c(
+        chl = "Chl-a",
+        temp = "Temp.",
+        do_sat = "DO(%)",
+        cond = "SpCond.",
+        ph = "pH",
+        turb = "Turb.",
+        tss = "TSS",
+        tp = "TP",
+        tdp = "TDP",
+        pp = "PP",
+        po4 = "PO4",
+        tn = "TN",
+        tdn = "TDN",
+        no3 = "NO3",
+        nh3 = "NH3",
+        toc = "TOC",
+        doc = "DOC",
+        poc = "POC",
+        si = "Si"
+      )
+      # Ordered polished labels, matching the order of `vars`
+      label_order <- unname(var_labels[vars])
+
+      plot_df <- results %>%
+        mutate(
+          value = .data[[val_col]],
+          p_value = .data[[p_col]],
+          significant = !is.na(p_value) & p_value < alpha,
+          label = ifelse(significant, sprintf("%.2f", value), NA),
+          var_y = factor(unname(var_labels[variable_y]), levels = label_order),
+          var_x = factor(
+            unname(var_labels[variable_x]),
+            levels = rev(label_order)
+          )
+        )
+
+      ggplot(plot_df, aes(x = var_x, y = var_y)) +
+        geom_tile(aes(fill = value), color = "grey85", linewidth = 0.3) +
+        geom_tile(
+          data = filter(plot_df, significant),
+          fill = NA,
+          color = "black",
+          linewidth = 0.9
+        ) +
+        geom_text(aes(label = label), size = 3.2, color = "black") +
+        scale_fill_BuRd(
+          name = fill_lab,
+          limits = c(-1, 1),
+          midpoint = 0,
+          reverse = TRUE
+        ) +
+        coord_equal() +
+        labs(title = title, x = NULL, y = NULL) +
+        theme_minimal(base_size = 12) +
+        theme(
+          panel.grid = element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "inside",
+          legend.position.inside = c(0.8, 0.8)
+        )
+    }
+  ),
+
+  # plots
+  tar_target(
+    lake_cor_plot,
+    ggsave(
+      "figures/lake_cor_plot.png",
+      plot_cor_matrix(
+        lake_cor_table,
+        vars = c(
+          "chl",
+          "temp",
+          "do_sat",
+          "cond",
+          "ph",
+          "turb",
+          "tss",
+          "tp",
+          "tdp",
+          "pp",
+          "po4",
+          "tn",
+          "tdn",
+          "no3",
+          "nh3",
+          "toc",
+          "doc",
+          "poc",
+          "si"
+        ),
+        title = "Lake Variable Correlation"
+      ),
+      dpi = 500
+    )
+  ),
+  tar_target(
+    est_cor_plot,
+    ggsave(
+      "figures/est_cor_plot.png",
+      plot_cor_matrix(
+        est_cor_table,
+        vars = c(
+          "chl",
+          "temp",
+          "do_sat",
+          "cond",
+          "ph",
+          "turb",
+          "tss",
+          "tp",
+          "po4",
+          "tn",
+          "no3",
+          "nh3"
+        ),
+        title = "Estuary Variable Correlation"
+      ),
+      dpi = 500
+    )
+  ),
+  tar_target(
+    trib_cor_plot,
+    ggsave(
+      "figures/trib_cor_plot.png",
+      plot_cor_matrix(
+        trib_cor_table,
+        vars = c(
+          "chl",
+          "temp",
+          "do_sat",
+          "cond",
+          "ph",
+          "turb",
+          "tss",
+          "tp",
+          "tdp",
+          "pp",
+          "po4",
+          "tn",
+          "tdn",
+          "no3",
+          "nh3",
+          "toc",
+          "doc",
+          "poc",
+          "si"
+        ),
+        title = "Tributary Variable Correlation"
+      ),
+      dpi = 500
+    )
+  ),
+
   ## Function to plot chl-a against a different variable ---------------------------
   # Adds linear regression R2 and P to plot
   tar_target(
@@ -382,6 +742,8 @@ analysis_targets <- list(
     }
   ),
 
+  ## Compare relationships between variables in Lake Superior
+
   ## Additional summary breakdowns --------------------------------------------------
   # Nearshore/offshore comparison from BRICO study
   tar_target(
@@ -400,6 +762,15 @@ analysis_targets <- list(
   tar_target(
     brico_med,
     brico %>%
+      select(-c(date, latitude, longitude, source)) %>%
+      summarise(
+        across(everything(), ~ median(., na.rm = T)),
+        .by = c(site, type)
+      )
+  ),
+  tar_target(
+    brico_type_med,
+    brico %>%
       select(-c(date, latitude, longitude, site, source)) %>%
       summarise(
         across(everything(), ~ median(., na.rm = T)),
@@ -410,10 +781,10 @@ analysis_targets <- list(
     brico_tp_comp,
     t.test(
       #tar_read(brico_tp_comp)
-      brico %>%
+      brico_med %>%
         filter(type == "nearshore") %>%
         pull(tp),
-      brico %>%
+      brico_med %>%
         filter(type == "offshore") %>%
         pull(tp)
     )
@@ -422,10 +793,10 @@ analysis_targets <- list(
     brico_no3_comp,
     t.test(
       #tar_read(brico_no3_comp)
-      brico %>%
+      brico_med %>%
         filter(type == "nearshore") %>%
         pull(no3),
-      brico %>%
+      brico_med %>%
         filter(type == "offshore") %>%
         pull(no3)
     )

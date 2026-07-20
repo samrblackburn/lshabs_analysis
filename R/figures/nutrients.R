@@ -57,6 +57,7 @@ nutrient_targets <- list(
     lake_nut_cor,
     lake_filt %>%
       select(
+        chl,
         no3,
         tdn,
         tn,

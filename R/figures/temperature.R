@@ -326,6 +326,7 @@ temperature_targets <- list(
   tar_target(
     buoy_temp_comp,
     lake_filt %>%
+      filter(!str_detect(site, "CB")) %>%
       left_join(nbdc_temp, by = join_by(date)) %>%
       ggplot(aes(x = temp.x, y = temp.y)) +
       xlab("Sample Location Water Temperature (ºC)") +
